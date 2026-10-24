@@ -1,8 +1,0 @@
-numpy
-pandas
-scipy
-matplotlib
-pyreadstat
-openpyxl
-keras
-tensorflow
