@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the accompanying article."
+title: "CalibRI: coverage audit and conformal recalibration of indirect reference-interval estimators"
+authors:
+  - family-names: "Al-Naffakh"
+    given-names: "Hussein Ali Hussein"
+    affiliation: "Al-Kafeel University, Najaf, Iraq"
+license: MIT
+repository-code: "https://github.com/hussein-alnaffakh1984/CalibRI"

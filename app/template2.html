@@ -1,0 +1,589 @@
+<title>CalibRI</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap">
+<style>
+/* Layout: a bench worksheet — input column and result sheet side by side on wide screens, stacked on phones */
+:root{
+  --bg:#F3F6F7; --surface:#FFFFFF; --ink:#14222C; --muted:#5A6B76; --line:#D5DEE3;
+  --accent:#0B6C88; --accent-soft:#E2F0F4; --cal:#B4531A; --cal-soft:#F8E7DB;
+  --ok:#1E7A4C; --ok-soft:#E1F2E8; --warn:#9A6400; --warn-soft:#FBF0D9; --bad:#B42318; --bad-soft:#FBE4E1;
+  --bar:#9CB8C4;
+  --f-display:"Readex Pro","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F171C; --surface:#162229; --ink:#E4ECEF; --muted:#94A6B0; --line:#2A3A43;
+  --accent:#5DB8D3; --accent-soft:#183540; --cal:#F0955C; --cal-soft:#3A2618;
+  --ok:#5CC98F; --ok-soft:#173326; --warn:#E5B04D; --warn-soft:#352A12; --bad:#F2796C; --bad-soft:#3B1C19;
+  --bar:#3E5E6C; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0F171C; --surface:#162229; --ink:#E4ECEF; --muted:#94A6B0; --line:#2A3A43;
+  --accent:#5DB8D3; --accent-soft:#183540; --cal:#F0955C; --cal-soft:#3A2618;
+  --ok:#5CC98F; --ok-soft:#173326; --warn:#E5B04D; --warn-soft:#352A12; --bad:#F2796C; --bad-soft:#3B1C19;
+  --bar:#3E5E6C; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65}
+.wrap{max-width:1140px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:22px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(25px,4vw,33px);margin:0;letter-spacing:.2px;text-wrap:balance}
+h1 .latin{font-family:var(--f-mono);font-weight:500;color:var(--accent)}
+.lede{margin:4px 0 0;color:var(--muted);max-width:66ch}
+.toprt{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tag{font-family:var(--f-mono);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:3px 8px;white-space:nowrap}
+.grid{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:880px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px;min-width:0}
+.panel h2{font-family:var(--f-display);font-size:17px;font-weight:600;margin:0 0 12px}
+.step{display:grid;gap:6px;margin-bottom:16px}
+label{font-weight:600;font-size:14px}
+.hint{font-size:12.5px;color:var(--muted);margin:0}
+textarea,select,input[type=number],input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+textarea{font-family:var(--f-mono);font-size:13px;min-height:110px;resize:vertical;direction:ltr;text-align:left}
+input[type=number],input[type=text]{font-family:var(--f-mono);direction:ltr;text-align:left}
+textarea:focus,select:focus,input:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;font-weight:600;border-radius:6px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+button.small{padding:5px 10px;font-size:13px}
+button:disabled{opacity:.55;cursor:default}
+button:hover:not(:disabled){filter:brightness(1.05)}
+.file input{font-size:13px;max-width:100%}
+.radio{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:14px}
+.radio label{font-weight:400;display:flex;gap:6px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:6px 12px;font-size:13px;background:var(--surface);color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.sample{display:inline-block;font-size:12px;font-weight:600;color:var(--warn);background:var(--warn-soft);border-radius:4px;padding:2px 8px;margin-bottom:10px}
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+@media (max-width:560px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kv{border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-width:0}
+.kv b{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.kv span{font-family:var(--f-mono);font-size:15px;font-variant-numeric:tabular-nums}
+.methodbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.limits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:560px){.limits{grid-template-columns:minmax(0,1fr)}}
+.lim{border:1px solid var(--line);border-radius:8px;padding:14px;min-width:0;display:grid;gap:8px;align-content:start}
+.lim h3{margin:0;font-family:var(--f-display);font-size:15px;font-weight:600}
+.est{font-family:var(--f-mono);font-size:28px;font-weight:500;font-variant-numeric:tabular-nums;direction:ltr;text-align:start}
+[dir=rtl] .est{text-align:right}
+.est small{font-size:13px;color:var(--muted);margin-inline-start:6px}
+.ints{display:grid;gap:4px;font-size:13.5px}
+.ints div{display:flex;justify-content:space-between;gap:8px}
+.ints .v{font-family:var(--f-mono);direction:ltr;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ints .cal .v{color:var(--cal);font-weight:600}
+.verdict{border-radius:6px;padding:8px 10px;font-size:13.5px}
+.verdict.ok{background:var(--ok-soft);color:var(--ok)}
+.verdict.bad{background:var(--bad-soft);color:var(--bad)}
+.verdict.none{background:var(--accent-soft);color:var(--accent)}
+table.cmp{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:14px}
+table.cmp th,table.cmp td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:start;white-space:nowrap}
+table.cmp th{font-weight:600;color:var(--muted);font-size:12.5px}
+table.cmp td.n{font-family:var(--f-mono);direction:ltr;font-variant-numeric:tabular-nums}
+.tblwrap{overflow-x:auto}
+.pill{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;font-weight:600}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.none{background:var(--accent-soft);color:var(--accent)}
+.notes{display:grid;gap:6px;margin-top:14px}
+.note{font-size:13px;border-inline-start:3px solid var(--warn);background:var(--warn-soft);padding:7px 10px;border-radius:0 6px 6px 0}
+[dir=ltr] .note{border-radius:6px 0 0 6px}
+.note.info{border-color:var(--accent);background:var(--accent-soft)}
+.err{color:var(--bad);font-weight:600}
+.busy{color:var(--muted);font-size:14px}
+.chartbox{margin-top:16px;overflow-x:auto}
+svg text{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:18px;height:10px;border-radius:2px;margin-inline-end:6px;vertical-align:middle}
+.exports{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+details.about{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 16px}
+details.about summary{cursor:pointer;font-family:var(--f-display);font-weight:600}
+.about p,.about li{max-width:76ch}
+.about ol,.about ul{padding-inline-start:20px}
+.mono{font-family:var(--f-mono);direction:ltr;unicode-bidi:isolate}
+footer{margin-top:22px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+footer .mono{word-break:break-all}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap" id="app" dir="rtl" lang="ar">
+<header class="top">
+  <div>
+    <h1><span data-i="title"></span> <span class="latin">CalibRI</span></h1>
+    <p class="lede" data-i="lede"></p>
+  </div>
+  <div class="toprt">
+    <span class="tag">reflimR 1.1.0 · RINet 0.1.1 · scheme (d)</span>
+    <div class="seg" role="group" aria-label="Language"><button type="button" id="lnAr" aria-pressed="true">عربي</button><button type="button" id="lnEn" aria-pressed="false">English</button></div>
+  </div>
+</header>
+
+<div class="grid">
+<section class="panel" aria-labelledby="in-h">
+  <h2 id="in-h" data-i="dataH"></h2>
+  <div class="step">
+    <label for="vals" data-i="valsL"></label>
+    <textarea id="vals" spellcheck="false"></textarea>
+    <p class="hint" id="countHint"></p>
+  </div>
+  <div class="step">
+    <label for="file" data-i="fileL"></label>
+    <div class="file"><input type="file" id="file" accept=".xlsx,.xls,.csv,.txt"></div>
+    <div class="btns" id="tplBtns" hidden>
+      <button type="button" class="small" id="tplX" data-i="tplX"></button>
+      <button type="button" class="small" id="tplC" data-i="tplC"></button>
+    </div>
+    <p class="hint" id="tplMsg" data-i="tplHint"></p>
+    <div id="colPick" hidden>
+      <div class="step" style="margin:8px 0 0"><label for="col" data-i="colL"></label><select id="col"></select></div>
+      <div class="row2" style="margin-top:8px">
+        <div><label for="f1c" data-i="f1L"></label><select id="f1c"></select></div>
+        <div><label for="f1v" data-i="valL"></label><select id="f1v"></select></div>
+      </div>
+      <div class="row2" style="margin-top:8px">
+        <div><label for="f2c" data-i="f2L"></label><select id="f2c"></select></div>
+        <div><label for="f2v" data-i="valL"></label><select id="f2v"></select></div>
+      </div>
+      <p class="hint" data-i="filterHint"></p>
+    </div>
+  </div>
+  <div class="step">
+    <label data-i="sexL"></label>
+    <div class="radio">
+      <label><input type="radio" name="sex" id="sexF" value="F" checked> <span data-i="sexF"></span></label>
+      <label><input type="radio" name="sex" id="sexM" value="M"> <span data-i="sexM"></span></label>
+      <label><input type="radio" name="sex" id="sexA" value="all"> <span data-i="sexAll"></span></label>
+    </div>
+    <p class="hint" id="sexHint"></p>
+  </div>
+  <div class="step">
+    <label for="analyte" data-i="analyteL"></label>
+    <select id="analyte">
+      <option value="TSH">TSH</option>
+      <option value="FT4">FT4</option>
+      <option value="TT4">Total T4</option>
+      <option value="TT3">Total T3</option>
+      <option value="Tg">Thyroglobulin</option>
+      <option value="HbA1c">HbA1c</option>
+      <option value="other" data-i="otherOpt"></option>
+    </select>
+    <p class="hint" data-i="analyteHint"></p>
+  </div>
+  <div class="step">
+    <label data-i="censL"></label>
+    <div class="radio">
+      <label><input type="radio" name="cens" id="censR" value="replace" checked> <span data-i="censR"></span></label>
+      <label><input type="radio" name="cens" id="censE" value="exclude"> <span data-i="censE"></span></label>
+    </div>
+  </div>
+  <div class="step">
+    <label data-i="mfrL"></label>
+    <div class="row2">
+      <div><label for="mLo" class="hint" data-i="lowL"></label><input type="number" id="mLo" step="any"></div>
+      <div><label for="mHi" class="hint" data-i="highL"></label><input type="number" id="mHi" step="any"></div>
+    </div>
+    <div><label for="unit" class="hint" data-i="unitL"></label><input type="text" id="unit"></div>
+    <p class="hint" data-i="mfrHint"></p>
+  </div>
+  <div class="btns">
+    <button class="primary" id="run" type="button" data-i="run"></button>
+    <button id="loadSample" type="button" data-i="sampleB"></button>
+    <button id="clear" type="button" data-i="clearB"></button>
+  </div>
+  <p class="hint" style="margin-top:12px" data-i="privacy"></p>
+</section>
+
+<section class="panel" aria-labelledby="out-h">
+  <h2 id="out-h" data-i="resH"></h2>
+  <div id="result"></div>
+</section>
+</div>
+
+<details class="about">
+  <summary data-i="aboutH"></summary>
+  <div id="aboutBody"></div>
+</details>
+<details class="about">
+  <summary data-i="verH"></summary>
+  <div id="verBody"></div>
+</details>
+
+<footer id="foot"></footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/*__REFLIM__*/
+/*__CALIB__*/
+/*__RINET__*/
+RINET.load(/*__WEIGHTS__*/);
+const QHAT=/*__QHAT__*/;
+const TPL_XLSX="/*__TPL__*/";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// ---------------- text ----------------
+const T={
+ar:{title:'حاسبة الحدود المرجعية',lede:'احسب الحد الأدنى والأعلى للمدى الطبيعي من نتائج مختبرك بطريقتين (reflimR الإحصائية وRINet بالتعلم العميق)، مع مدى ثقة مصحَّح بطريقة conformal prediction، وقارنه برقم الشركة المصنّعة.',
+ dataH:'البيانات',valsL:'نتائج المرضى (قيمة لكل سطر أو مفصولة بفواصل)',fileL:'أو ارفع ملف Excel أو CSV',tplX:'تنزيل قالب Excel',tplC:'تنزيل قالب CSV',
+ tplHint:'القالب: عمودين، Result للنتيجة وSex للجنس (F للنساء أو M للرجال). ملف واحد لكل تحليل.',sexL:'الجنس',tDist:'التوزيع والمنحنى',tEcdf:'المنحنى التراكمي',tForest:'مقارنة المديات',tQQ:'مخطط Q-Q',lgCurve:'توزيع الأصحاء المقدَّر',yEcdf:'نسبة النتائج الأقل',lgEcdf:'النسبة التراكمية للنتائج',lgPoint:'التقدير',lgNative:'مدى الثقة الأصلي',lgQQpts:'نتائج بعد استبعاد المتطرفة',lgQQline:'الخط المطابق',qqX:'الكميات النظرية (z)',qqY:'القيم',qqOnly:'مخطط Q-Q خاص بطريقة reflimR، لأنها تقدّر الحدود منه.',capDist:'الأعمدة نتائج مختبرك، والمنحنى البرتقالي توزيع الأصحاء اللي استنتجته الطريقة (تقريبي). الحدّان يقطعان 2.5% من كل طرف من هذا المنحنى.',capEcdf:(a,b)=>`كل نقطة تبين نسبة النتائج الأقل من تلك القيمة. ${a!=='—'?`أقل من الحد الأدنى للشركة: ${a} من النتائج. `:''}${b!=='—'?`أقل من الحد الأعلى للشركة: ${b}.`:''}`,capForest:'النقطة هي التقدير، والخط الأسود مدى الثقة الأصلي، والمستطيل البرتقالي المدى المصحَّح. إذا الخط المتقطع (رقم الشركة) داخل المستطيل فهو متوافق.',capQQ:'إذا كانت النقاط على الخط المستقيم فالتوزيع بعد استبعاد المتطرفة يشبه التوزيع الطبيعي (أو اللوغاريتمي). النقطتان السوداوان عند ±1.96 هما الحدّان المقدَّران.',mfrHint:'اكتب المدى المكتوب على نشرة الكت لهذا التحليل. يُمسح تلقائياً عند تغيير التحليل.',mfrPh:'من نشرة الكت',unitPh:'مثل mIU/L',nSampleAn:'بيانات المثال مُحاكاة على شكل نتائج TSH، فلا تمثل التحليل اللي اخترته. ارفع نتائج التحليل نفسه حتى يتغير المدى.',nNoMatch:a=>`لم أجد ${a} في عمود التصفية. تأكد أن الملف يحتوي نتائج هذا التحليل.`,sexF:'نساء',sexM:'رجال',sexAll:'الاثنين معاً',sexHintCol:c=>`البرنامج يختار النتائج حسب عمود «${c}» في الملف.`,sexHintNo:'الملف أو النتائج الملصقة بدون عمود جنس: تأكد أن كل النتائج لنفس الجنس اللي اخترته.',nAll:'الأفضل حساب النساء والرجال كل واحد لوحده، لأن المدى الطبيعي يختلف بينهم في تحاليل كثيرة.',nSexUnk:c=>`${c} نتيجة بقيمة جنس غير مفهومة لم تُحسب (المقبول: F أو M، أو أنثى أو ذكر).`,
+ colL:'عمود النتائج',f1L:'تصفية 1 (اختياري)',f2L:'تصفية 2 (اختياري)',valL:'القيمة',filterHint:'مثال: Chemistry = TSH. الجنس يُختار من خيار «الجنس» تحت.',none:'بدون',
+ analyteL:'التحليل',otherOpt:'تحليل آخر',analyteHint:'يُستبعد التحليل نفسه من بيانات المعايرة، مثل ما في البحث.',
+ censL:'القيم الخارجة عن مدى القياس (مثل <0.005 أو >100)',censR:'تعويض (نصف الحد الأدنى، والحد الأعلى نفسه)',censE:'استبعاد',
+ mfrL:'المدى الطبيعي للشركة (اختياري)',lowL:'الحد الأدنى',highL:'الحد الأعلى',unitL:'الوحدة',run:'احسب',sampleB:'تحميل المثال',clearB:'مسح',
+ privacy:'البيانات تبقى على جهازك. الحساب يجري داخل المتصفح ولا يُرسل أي شيء إلى أي خادم.',resH:'النتيجة',
+ count:n=>n?`${n.toLocaleString('en')} قيمة`:'لا توجد قيم بعد',busy:'جاري الحساب…',emptyMsg:'ألصق النتائج أو ارفع ملفاً ثم اضغط «احسب».',
+ nTot:'عدد النتائج',nTrunc:'بعد استبعاد المتطرفة (reflimR)',shape:'شكل التوزيع',bin:'حجم المعايرة',
+ showMethod:'عرض الطريقة',lower:'الحد الأدنى',upper:'الحد الأعلى',native:m=>`مدى الثقة الأصلي (${m})`,calib:'المدى المصحَّح 95%',qf:'عامل التوسيع q̂',
+ vNone:'أدخل رقم الشركة للمقارنة.',vNA:'لا يتوفر مدى مصحَّح لهذا الحد.',
+ vOk:m=>`رقم الشركة (${m}) يقع ضمن المدى المصحَّح، فلا توجد أدلة كافية على أنه لا يناسب مختبرك.`,
+ vBad:(m,lo)=>`رقم الشركة (${m}) ${lo?'أقل':'أعلى'} من المدى المصحَّح، وهذا مؤشر على اختلاف يستحق التحقق.`,
+ lrlWarn:'تنبيه: الطريقتان تقدّران الحد الأدنى للـ TSH أعلى من الحقيقي غالباً (16% إلى 35% في بياناتنا).',
+ cmpH:'مقارنة الطريقتين',cmpMethod:'الطريقة',cmpLimit:'الحد',cmpEst:'التقدير',cmpCal:'المدى المصحَّح',cmpMfr:'رقم الشركة',
+ pOk:'ضمن المدى',pBad:'خارج المدى',pNone:'—',
+ lgBars:'النتائج',lgEst:'الحد المحسوب',lgCal:'المدى المصحَّح 95%',lgMfr:'رقم الشركة',yLab:'عدد النتائج',logS:'مقياس لوغاريتمي',linS:'مقياس خطي',
+ exH:'حفظ النتائج',exCsv:'تنزيل النتائج (CSV)',exRep:'تنزيل تقرير (HTML)',saved:'تم الحفظ.',declined:'أُلغي التنزيل.',busyDl:'هناك نافذة تنزيل مفتوحة. أكملها أولاً.',noDl:'التنزيل غير متاح هنا.',
+ nSample:'هذه بيانات مثال مُحاكاة، وليست نتائج مرضى حقيقيين.',
+ nBig:n=>`حجم العينة (${n}) أكبر من أكبر حجم معايرة (2,000)، والتوسيع يزداد مع حجم العينة، لذلك المدى المصحَّح غالباً أضيق من اللازم.`,
+ nSmall:n=>`حجم العينة (${n}) أقل من أصغر حجم معايرة (300). النتيجة تقريبية، ويُفضّل 300 نتيجة على الأقل.`,
+ nCens:(c,ex)=>`${c} نتيجة خارج مدى القياس ${ex?'استُبعدت':'عُوِّضت'}.`,nBad:c=>`${c} قيمة غير رقمية تجاهلتها الحاسبة.`,nNonpos:c=>`${c} قيمة صفرية أو سالبة: استبعدتها reflimR، وعوّضتها RINet بنصف أصغر قيمة موجبة.`,
+ nOther:'لتحليل غير موجود في بيانات المعايرة، استُخدمت كل بيانات المعايرة (عدا FT4). التصحيح هنا أقل تحققاً.',
+ nFT4:'FT4 في بيانات المعايرة كان مقرّباً لخطوة 0.1 ng/dL فاستُبعد منها؛ التصحيح لـ FT4 يعتمد على بقية التحاليل.',
+ nRinet:'مدى RINet يعتمد على 50 إعادة معاينة عشوائية (مثل البحث)، لذلك قد يختلف قليلاً عن نتائج البحث للبيانات نفسها.',
+ nCoarse:'كثير من القيم مكررة (تقريب خشن). النتائج أقل دقة، وفي البحث استُخدم هامش نصف خطوة التقريب.',
+ eFew:'عدد النتائج الصالحة أقل من 40. أضف نتائج أكثر.',eTrunc:'بقي أقل من 40 نتيجة بعد استبعاد القيم المتطرفة. أضف نتائج أكثر.',eBad:'تعذّر الحساب: البيانات لا تعطي حدّين صالحين (مثلاً معظم القيم متساوية).',
+ eXlsx:'تعذّر تحميل قارئ Excel. احفظ الملف بصيغة CSV وارفعه مرة ثانية.',eFile:'تعذّرت قراءة الملف. تأكد أنه Excel أو CSV ويحتوي عمود نتائج.',read:n=>`عدد القيم المقروءة: ${n}`,
+ tplSaved:'تم حفظ القالب. اكتب النتائج تحت كلمة Result ثم ارفعه هنا.',
+ aboutH:'شلون تشتغل الحاسبة، وشنو حدودها',verH:'شلون تأكدنا من صحة الحساب',
+ about:`<ol><li><b>reflimR 1.1.0</b>: طريقة إحصائية تستبعد القيم المتطرفة ثم تقدّر الحدين من مخطط Q-Q. مدى الثقة الأصلي فيها معادلة تعتمد على حجم العينة فقط.</li>
+ <li><b>RINet 0.1.1</b>: شبكة عصبية التفافية (CNN) مدرّبة على بيانات مُحاكاة، تقرأ شكل التوزيع وتقدّر الحدين. مدى الثقة الأصلي من 50 إعادة معاينة (bootstrap).</li>
+ <li><b>التصحيح (conformal prediction)</b>: نوسّع مدى الثقة الأصلي بعامل <span class="mono">q̂</span> تعلّمناه من آلاف المجموعات اللي نعرف حدودها الحقيقية (محاكاة RIbench وبيانات NHANES، مع استبعاد التحليل نفسه)، حسب حجم العينة الأقرب: 300 أو 500 أو 1,000 أو 2,000.</li>
+ <li>المدى المصحَّح يحتوي الحد الحقيقي بنسبة قريبة من 95% <b>في المتوسط</b> على بيانات المعايرة. هذا ليس ضماناً لكل مختبر، لأن بيانات مختبرك قد تختلف عنها.</li>
+ <li>الطريقتان تقدّران الحد الأدنى للـ TSH أعلى من الحقيقي غالباً، والتصحيح يوسّع المدى ولا يحرّكه. لذلك لا تبنِ قراراً على الحد الأدنى وحده.</li>
+ <li>الحاسبة أداة بحثية للمساعدة في التحقق من المدى الطبيعي، ولا تغني عن توصيات IFCC ولا عن قرار المختص.</li></ol>`,
+ ver:`<ul><li>حساب reflimR في الحاسبة قورن بحزمة R الأصلية على 475 مجموعة بيانات: أكبر فرق نسبي أقل من <span class="mono">10⁻¹³</span>. في 3 مجموعات معظم قيمها متساوية أعطت الحزمة رقماً والحاسبة رسالة «تعذّر الحساب».</li>
+ <li>شبكة RINet في الحاسبة قورنت بالنموذج الأصلي (Keras) على 475 مجموعة: أكبر فرق نسبي <span class="mono">3 × 10⁻⁷</span> (دقة float32).</li>
+ <li>عوامل التصحيح <span class="mono">q̂</span> مطابقة لقيم البحث، وأرقام reflimR المصحَّحة لبيانات السماوة في الحاسبة مطابقة لجدول 4 في البحث تماماً. أرقام RINet المصحَّحة قريبة منها وتختلف قليلاً بسبب إعادة المعاينة العشوائية.</li></ul>`,
+ foot:`الطريقة والأرقام من بحث CalibRI (H. A. H. Al-Naffakh). الكود: <span class="mono">github.com/hussein-alnaffakh1984/CalibRI</span>. reflimR من تأليف Hoffmann وKlawitter وTrulson وKlawonn (GPL-3)؛ RINet من تأليف LeBien وVelev وRoche-Lima (MIT).`,
+ lnorm:'log-normal',norm:'normal',rep:'تقرير CalibRI',repGen:'أُنشئ في',repAnalyte:'التحليل',repN:'عدد النتائج',repNotes:'ملاحظات',repDisc:'أداة بحثية؛ المدى المصحَّح يحتوي الحد الحقيقي بنسبة قريبة من 95% في المتوسط على بيانات المعايرة، وليس ضماناً لكل مختبر.',
+ group:'المجموعة',all:'كل البيانات',sampleTag:'مثال مُحاكى'},
+en:{title:'Reference limit calculator',lede:'Estimate the lower and upper reference limits from your laboratory’s own results with two methods (statistical reflimR and deep-learning RINet), widen their uncertainty with conformal prediction, and compare them with the manufacturer’s range.',
+ dataH:'Data',valsL:'Patient results (one per line or comma-separated)',fileL:'Or upload an Excel or CSV file',tplX:'Download Excel template',tplC:'Download CSV template',
+ tplHint:'Template: two columns, Result for the value and Sex for sex (F or M). One file per analyte.',sexL:'Sex',tDist:'Distribution and curve',tEcdf:'Cumulative curve',tForest:'Interval comparison',tQQ:'Q-Q plot',lgCurve:'Estimated healthy distribution',yEcdf:'Share of results below',lgEcdf:'Cumulative share of results',lgPoint:'Estimate',lgNative:'Native interval',lgQQpts:'Results after outlier removal',lgQQline:'Fitted line',qqX:'Theoretical quantiles (z)',qqY:'Values',qqOnly:'The Q-Q plot belongs to reflimR, which estimates the limits from it.',capDist:'Bars are your results; the orange curve is the healthy distribution inferred by the method (approximate). The limits cut 2.5% from each tail of this curve.',capEcdf:(a,b)=>`Each point shows the share of results below that value. ${a!=='—'?`Below the manufacturer's lower limit: ${a} of results. `:''}${b!=='—'?`Below the manufacturer's upper limit: ${b}.`:''}`,capForest:'The dot is the estimate, the black line the native interval and the orange box the calibrated interval. If the dashed line (manufacturer) falls inside the box, it is consistent.',capQQ:'If the points follow the straight line, the distribution after outlier removal is close to normal (or log-normal). The two black dots at ±1.96 are the estimated limits.',mfrHint:'Enter the range printed in the kit insert for this analyte. It is cleared when the analyte changes.',mfrPh:'from kit insert',unitPh:'e.g. mIU/L',nSampleAn:'The example data are simulated TSH-like results, so they do not represent the analyte you selected. Upload results of that analyte to change the range.',nNoMatch:a=>`${a} was not found in the filter column. Check that the file contains results for this analyte.`,sexF:'Women',sexM:'Men',sexAll:'Both together',sexHintCol:c=>`Results are selected using the “${c}” column of the file.`,sexHintNo:'No sex column in the file or pasted results: make sure all results belong to the sex you selected.',nAll:'It is better to calculate women and men separately, because reference limits differ by sex for many analytes.',nSexUnk:c=>`${c} results with an unrecognised sex value were not used (accepted: F or M).`,
+ colL:'Result column',f1L:'Filter 1 (optional)',f2L:'Filter 2 (optional)',valL:'Value',filterHint:'Example: Chemistry = TSH. Sex is chosen with the Sex option below.',none:'None',
+ analyteL:'Analyte',otherOpt:'Other analyte',analyteHint:'The analyte itself is excluded from the calibration data, as in the study.',
+ censL:'Results outside the measuring range (e.g. <0.005 or >100)',censR:'Replace (half the lower bound; the upper bound itself)',censE:'Exclude',
+ mfrL:'Manufacturer reference interval (optional)',lowL:'Lower limit',highL:'Upper limit',unitL:'Unit',run:'Calculate',sampleB:'Load example',clearB:'Clear',
+ privacy:'Your data stay on your device. All calculations run in the browser; nothing is sent to a server.',resH:'Result',
+ count:n=>n?`${n.toLocaleString('en')} values`:'No values yet',busy:'Calculating…',emptyMsg:'Paste results or upload a file, then press Calculate.',
+ nTot:'Results',nTrunc:'After outlier removal (reflimR)',shape:'Distribution',bin:'Calibration size',
+ showMethod:'Show method',lower:'Lower limit',upper:'Upper limit',native:m=>`Native interval (${m})`,calib:'Calibrated 95% interval',qf:'Widening factor q̂',
+ vNone:'Enter the manufacturer’s limit to compare.',vNA:'No calibrated interval is available for this limit.',
+ vOk:m=>`The manufacturer’s limit (${m}) lies within the calibrated interval; there is no clear evidence that it does not fit your laboratory.`,
+ vBad:(m,lo)=>`The manufacturer’s limit (${m}) is ${lo?'below':'above'} the calibrated interval, which suggests a difference worth verifying.`,
+ lrlWarn:'Note: both methods tended to overestimate the TSH lower limit (by 16% to 35% in our data).',
+ cmpH:'Both methods',cmpMethod:'Method',cmpLimit:'Limit',cmpEst:'Estimate',cmpCal:'Calibrated interval',cmpMfr:'Manufacturer',
+ pOk:'inside',pBad:'outside',pNone:'—',
+ lgBars:'Results',lgEst:'Estimated limit',lgCal:'Calibrated 95% interval',lgMfr:'Manufacturer limit',yLab:'Number of results',logS:'log scale',linS:'linear scale',
+ exH:'Save results',exCsv:'Download results (CSV)',exRep:'Download report (HTML)',saved:'Saved.',declined:'Download cancelled.',busyDl:'A download prompt is already open. Finish it first.',noDl:'Downloads are not available here.',
+ nSample:'These are simulated example data, not real patient results.',
+ nBig:n=>`The sample size (${n}) exceeds the largest calibration size (2,000); widening grows with sample size, so the calibrated intervals are probably too narrow.`,
+ nSmall:n=>`The sample size (${n}) is below the smallest calibration size (300). Results are approximate; at least 300 results are recommended.`,
+ nCens:(c,ex)=>`${c} results outside the measuring range were ${ex?'excluded':'replaced'}.`,nBad:c=>`${c} non-numeric values were ignored.`,nNonpos:c=>`${c} zero or negative values: removed by reflimR and replaced by half the smallest positive value for RINet.`,
+ nOther:'For an analyte not in the calibration data, all calibration data except FT4 were used. Calibration is less well validated here.',
+ nFT4:'FT4 was reported in 0.1 ng/dL steps in the calibration data and was excluded from it; calibration for FT4 relies on the other analytes.',
+ nRinet:'The RINet interval uses 50 random bootstrap resamples (as in the study), so it can differ slightly from the study’s values for the same data.',
+ nCoarse:'Many values are repeated (coarse rounding). Results are less precise; the study used a tolerance of half the rounding step.',
+ eFew:'Fewer than 40 valid results. Add more results.',eTrunc:'Fewer than 40 results remained after outlier removal. Add more results.',eBad:'Calculation failed: the data do not give two valid limits (for example, most values are identical).',
+ eXlsx:'The Excel reader could not be loaded. Save the file as CSV and upload it again.',eFile:'The file could not be read. Check that it is Excel or CSV with a result column.',read:n=>`Values read: ${n}`,
+ tplSaved:'Template saved. Enter results under Result and upload it here.',
+ aboutH:'How the calculator works, and its limits',verH:'How the calculations were verified',
+ about:`<ol><li><b>reflimR 1.1.0</b>: a statistical method that removes outliers and estimates the limits from a Q-Q plot. Its native confidence interval is a formula that depends only on sample size.</li>
+ <li><b>RINet 0.1.1</b>: a convolutional neural network trained on simulated data that reads the shape of the distribution and estimates the limits. Its native interval comes from 50 bootstrap resamples.</li>
+ <li><b>Calibration (conformal prediction)</b>: the native interval is widened by a factor <span class="mono">q̂</span> learned from thousands of datasets with known true limits (RIbench simulations and NHANES, excluding the analyte itself), using the nearest sample-size bin of 300, 500, 1,000 or 2,000.</li>
+ <li>The calibrated interval contains the true limit about 95% of the time <b>on average</b> in the calibration data. This is not a guarantee for every laboratory, because your data may differ.</li>
+ <li>Both methods tended to overestimate the TSH lower limit, and calibration widens the interval without moving it, so do not base a decision on the lower limit alone.</li>
+ <li>The calculator is a research tool to support the verification of reference intervals; it does not replace IFCC recommendations or expert judgement.</li></ol>`,
+ ver:`<ul><li>The calculator’s reflimR was compared with the R package on 475 datasets: largest relative difference below <span class="mono">10⁻¹³</span>. In 3 datasets with mostly identical values, the package returned a value and the calculator reports that it cannot compute.</li>
+ <li>The calculator’s RINet network was compared with the original Keras model on 475 datasets: largest relative difference <span class="mono">3 × 10⁻⁷</span> (float32 precision).</li>
+ <li>The widening factors <span class="mono">q̂</span> equal those of the study, and the calculator reproduces the study’s calibrated reflimR values for the Al-Samawah data (Table 4) exactly; calibrated RINet values are close but differ slightly because of random resampling.</li></ul>`,
+ foot:`Method and numbers from the CalibRI study (H. A. H. Al-Naffakh). Code: <span class="mono">github.com/hussein-alnaffakh1984/CalibRI</span>. reflimR by Hoffmann, Klawitter, Trulson and Klawonn (GPL-3); RINet by LeBien, Velev and Roche-Lima (MIT).`,
+ lnorm:'log-normal',norm:'normal',rep:'CalibRI report',repGen:'Generated',repAnalyte:'Analyte',repN:'Results',repNotes:'Notes',repDisc:'Research tool; the calibrated interval contains the true limit about 95% of the time on average in the calibration data, which is not a guarantee for every laboratory.',
+ group:'Group',all:'All data',sampleTag:'Simulated example'}};
+let LANG='ar'; try{ const s=localStorage.getItem('calibri-lang'); if(s==='en'||s==='ar') LANG=s; }catch(e){}
+const t=(k,...a)=>{ const v=T[LANG][k]; return typeof v==='function'?v(...a):v; };
+function applyLang(){ const app=$('app'); app.dir=LANG==='ar'?'rtl':'ltr'; app.lang=LANG; document.documentElement.lang=LANG;
+  document.querySelectorAll('[data-i]').forEach(el=>{ el.textContent=t(el.dataset.i); });
+  $('aboutBody').innerHTML=t('about'); $('verBody').innerHTML=t('ver'); $('foot').innerHTML=t('foot');
+  $('lnAr').setAttribute('aria-pressed',LANG==='ar'); $('lnEn').setAttribute('aria-pressed',LANG==='en');
+  [['f1c'],['f2c']].forEach(([id])=>{ const o=$(id).querySelector('option[value=""]'); if(o) o.textContent=t('none'); });
+  $('mLo').placeholder=t('mfrPh'); $('mHi').placeholder=t('mfrPh'); $('unit').placeholder=t('unitPh');
+  updateSexHint(); updateCount(); if(LAST) render(); else if(!$('result').innerHTML) $('result').innerHTML=`<p class="hint">${t('emptyMsg')}</p>`; }
+function setLang(l){ LANG=l; try{ localStorage.setItem('calibri-lang',l); }catch(e){} applyLang(); }
+
+const fmt=(v,d)=>{ if(!Number.isFinite(v)) return '—'; const a=Math.abs(v); const dd=d!=null?d:(a>=100?1:a>=10?2:a>=1?2:a>=0.1?3:4); return v.toFixed(dd); };
+
+// ---------------- example data (simulated, seeded) ----------------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function sampleData(){ const r=mulberry32(20261023); const z=()=>{let u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+  const out=[]; for(let i=0;i<900;i++) out.push(Math.exp(Math.log(1.55)+0.47*z()));
+  for(let i=0;i<100;i++) out.push(Math.exp(Math.log(7.5)+0.75*z()));
+  for(let i=out.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[out[i],out[j]]=[out[j],out[i]];}
+  return out.map(v=>v<0.005?'<0.005':v>100?'>100':v.toFixed(3)); }
+
+// ---------------- parsing ----------------
+function parseTokens(tokens,mode){ const vals=[]; let cens=0,bad=0;
+  for(let s of tokens){ s=String(s??'').trim(); if(!s) continue;
+    const m=s.match(/^([<>])\s*=?\s*([0-9]*\.?[0-9]+(?:e[-+]?\d+)?)$/i);
+    if(m){ cens++; if(mode==='exclude') continue; const x=parseFloat(m[2]); vals.push(m[1]==='<'?x/2:x); continue; }
+    const x=Number(s); if(Number.isFinite(x)) vals.push(x); else bad++; }
+  return {vals,cens,bad}; }
+const textTokens=()=>$('vals').value.split(/[\s;,]+/);
+let sheetRows=null, SEXCOL=null, SEXUNK=0;
+const sexSel=()=>document.querySelector('input[name=sex]:checked').value;
+function sexOf(v){ const x=String(v??'').trim().toLowerCase(); if(['f','female','woman','women','w','أنثى','انثى','اناث','إناث','أ','ن'].includes(x)) return 'F'; if(['m','male','man','men','ذكر','ذكور','ذ','ر'].includes(x)) return 'M'; return null; }
+function sheetTokens(){ const c=$('col').value, a=$('f1c').value, av=$('f1v').value, b=$('f2c').value, bv=$('f2v').value, sx=sexSel();
+  let rows=sheetRows.filter(r=>(!a||String(r[a]).trim()===av)&&(!b||String(r[b]).trim()===bv));
+  SEXUNK=0; if(SEXCOL){ if(sx!=='all'){ rows=rows.filter(r=>{ const g=sexOf(r[SEXCOL]); if(!g){ if(String(r[c]??'').trim()!=='') SEXUNK++; return false; } return g===sx; }); } }
+  return rows.map(r=>r[c]); }
+function sexLabel(){ const sx=sexSel(); return sx==='F'?t('sexF'):sx==='M'?t('sexM'):t('sexAll'); }
+function filtLabel(){ const p=[]; if(sheetRows) for(const [c,v] of [['f1c','f1v'],['f2c','f2v']]) if($(c).value) p.push(`${$(c).value} = ${$(v).value}`); return p.join(' · '); }
+const grpOf=R=>[R.sex==='F'?t('sexF'):R.sex==='M'?t('sexM'):t('sexAll'),R.filt].filter(Boolean).join(' · ');
+function updateSexHint(){ $('sexHint').textContent= SEXCOL ? t('sexHintCol',SEXCOL) : t('sexHintNo'); }
+
+// ---------------- calculation ----------------
+let LAST=null, METHOD='reflimR';
+function compute(){
+  const mode=document.querySelector('input[name=cens]:checked').value;
+  const {vals,cens,bad}=parseTokens(sheetRows?sheetTokens():textTokens(),mode);
+  const an=$('analyte').value, ex= an==='other'||an==='FT4' ? 'none' : an;
+  const res={vals,cens,bad,mode,an,ex,sex:sexSel(),sexUnk:SEXUNK,noMatch:NOMATCH,isSample:$('vals').dataset.sample==='1'&&!sheetRows,filt:filtLabel(),unit:$('unit').value.trim(),
+             mLoRaw:$('mLo').value.trim(),mHiRaw:$('mHi').value.trim()};
+  res.mLo=parseFloat(res.mLoRaw); res.mHi=parseFloat(res.mHiRaw);
+  const rl=reflim(vals); res.reflimR=rl;
+  if(!rl.ok){ res.error=rl.reason; return res; }
+  const rn=RINET.estimate(vals,50,20261016); res.RINet=rn;
+  res.bin=nearestBin(rl.n);
+  for(const [name,r] of [['reflimR',rl],['RINet',rn]]){ if(!r||!r.ok) continue; const Q=QHAT[name][res.ex];
+    r.qL=Q.LRL[res.bin]; r.qU=Q.URL[res.bin]; r.cL=calibrate(r.lower,r.ciLower[0],r.ciLower[1],r.qL); r.cU=calibrate(r.upper,r.ciUpper[0],r.ciUpper[1],r.qU); }
+  const uniq=new Set(vals.map(v=>v.toPrecision(6))).size; res.coarse=uniq<vals.length*0.15;
+  return res; }
+function verdictOf(m,iv){ if(!Number.isFinite(m)) return 'none'; if(!iv) return 'na'; return m>=iv[0]&&m<=iv[1]?'ok':(m<iv[0]?'low':'high'); }
+
+// ---------------- chart ----------------
+// ---------------- charts ----------------
+let CHART='dist';
+const ZQ=1.959963984540054;
+function niceTicks(lo,hi,lg){ const ticks=[]; if(lg){ for(let e=-4;e<=6;e++) for(const m of [1,2,5]){ const v=m*Math.pow(10,e); const tv=Math.log(v); if(tv>=lo&&tv<=hi) ticks.push(v);} if(ticks.length<3){ ticks.length=0; for(let k=0;k<=4;k++) ticks.push(+Math.exp(lo+(hi-lo)*k/4).toPrecision(2)); } }
+  else { const step=Math.pow(10,Math.floor(Math.log10((hi-lo)/5))); for(let v=Math.ceil(lo/step)*step; v<=hi+1e-12; v+=step) ticks.push(+v.toPrecision(6)); }
+  return ticks.length>9?ticks.filter((_,i)=>i%2===0):ticks; }
+function frame(W,H){ return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:420px;display:block;direction:ltr" direction="ltr" role="img">`; }
+function xAxis(lo,hi,lg,X,y0,W,P){ let g=`<line x1="${P.l}" y1="${y0}" x2="${W-P.r}" y2="${y0}" stroke="var(--line)"/>`;
+  for(const v of niceTicks(lo,hi,lg)){ const xx=X(lg?Math.log(v):v); if(xx<P.l-1||xx>W-P.r+1) continue; g+=`<line x1="${xx}" y1="${y0}" x2="${xx}" y2="${y0+4}" stroke="var(--muted)"/><text x="${xx}" y="${y0+16}" text-anchor="middle">${v}</text>`; } return g; }
+function vline(v,tf,lo,hi,X,y1,y2,col,dash,w){ if(!(v>0)) return ''; const u=tf(v); if(u<lo||u>hi) return ''; const xx=X(u); return `<line x1="${xx}" y1="${y1}" x2="${xx}" y2="${y2}" stroke="${col}" stroke-width="${w||2}" ${dash?'stroke-dasharray="5 4"':''}/>`; }
+function range(x,r,lg,mLo,mHi){ const tf=v=>lg?Math.log(v):v; const s=Float64Array.from(x.filter(v=>v>0)).sort();
+  const q=p=>s[Math.min(s.length-1,Math.max(0,Math.floor(p*(s.length-1))))];
+  let lo=tf(Math.min(q(0.005),r.lower*0.7, r.cL?r.cL[0]:Infinity, mLo>0?mLo:Infinity)), hi=tf(Math.max(q(0.99),r.upper*1.25, r.cU?r.cU[1]:-Infinity, mHi>0?mHi:-Infinity));
+  if(!(hi>lo)) hi=lo+1; return {tf,s,lo,hi}; }
+function unitTxt(lg){ const u=res0().unit; return esc(lg?t('logS'):t('linS'))+(u?' · '+esc(u):''); }
+function healthyParams(r,name){ // distribution of the reference population implied by the method
+  if(name==='reflimR') return {log:r.lognormal, mu:r.mean, sd:r.sd};
+  return {log:true, mu:(Math.log(r.lower)+Math.log(r.upper))/2, sd:(Math.log(r.upper)-Math.log(r.lower))/(2*ZQ)}; }
+function chartDist(x,r,name,lg,mLo,mHi,rl){
+  const W=640,H=250,P={l:52,r:14,t:14,b:36}; const {tf,s,lo,hi}=range(x,r,lg,mLo,mHi);
+  const nb=40,bw=(hi-lo)/nb,cnt=new Array(nb).fill(0); for(const v of s){ const u=tf(v); if(u<lo||u>hi) continue; cnt[Math.min(nb-1,Math.floor((u-lo)/bw))]++; }
+  const hp=healthyParams(name==='reflimR'?rl:r,name), Nh=Math.min(rl.n, rl.nTrunc/0.95);
+  const pdfU=u=>{ const v=lg?Math.exp(u):u; if(!(v>0)&&hp.log) return 0; const z=((hp.log?Math.log(v):v)-hp.mu)/hp.sd; let d=Math.exp(-0.5*z*z)/(hp.sd*Math.sqrt(2*Math.PI)); if(hp.log&&!lg) d/=v; if(!hp.log&&lg) d*=v; return d; };
+  const curve=[]; for(let k=0;k<=160;k++){ const u=lo+(hi-lo)*k/160; curve.push([u,Nh*pdfU(u)*bw]); }
+  const mx=Math.max(...cnt,...curve.map(c=>c[1]),1), X=u=>P.l+(u-lo)/(hi-lo)*(W-P.l-P.r), Y=c=>H-P.b-c/mx*(H-P.t-P.b);
+  let g=frame(W,H); const band=iv=>{ if(!iv) return ''; const a=X(Math.max(lo,tf(iv[0]))), b=X(Math.min(hi,tf(iv[1]))); return `<rect x="${a}" y="${P.t}" width="${Math.max(1,b-a)}" height="${H-P.t-P.b}" fill="var(--cal-soft)"/>`; };
+  g+=band(r.cL)+band(r.cU);
+  for(let i=0;i<nb;i++){ if(!cnt[i]) continue; const a=X(lo+i*bw)+0.6,b=X(lo+(i+1)*bw)-0.6; g+=`<rect x="${a}" y="${Y(cnt[i])}" width="${Math.max(0.5,b-a)}" height="${H-P.b-Y(cnt[i])}" fill="var(--bar)"/>`; }
+  g+=`<polyline fill="none" stroke="var(--cal)" stroke-width="2.2" points="${curve.map(([u,c])=>`${X(u).toFixed(1)},${Y(c).toFixed(1)}`).join(' ')}"/>`;
+  g+=`<line x1="${P.l}" y1="${P.t}" x2="${P.l}" y2="${H-P.b}" stroke="var(--line)"/>`;
+  for(const c of [0,Math.round(mx/2),Math.round(mx)]) g+=`<text x="${P.l-6}" y="${Y(c)+4}" text-anchor="end">${c}</text>`;
+  g+=`<text transform="translate(12 ${(P.t+H-P.b)/2}) rotate(-90)" text-anchor="middle" style="font-family:var(--f-body)">${esc(t('yLab'))}</text>`;
+  g+=xAxis(lo,hi,lg,X,H-P.b,W,P)+`<text x="${(P.l+W-P.r)/2}" y="${H-3}" text-anchor="middle" style="font-family:var(--f-body)">${unitTxt(lg)}</text>`;
+  g+=vline(r.lower,tf,lo,hi,X,P.t,H-P.b,'var(--ink)')+vline(r.upper,tf,lo,hi,X,P.t,H-P.b,'var(--ink)')+vline(mLo,tf,lo,hi,X,P.t,H-P.b,'var(--accent)',1)+vline(mHi,tf,lo,hi,X,P.t,H-P.b,'var(--accent)',1)+'</svg>';
+  return g+legend([['bar',t('lgBars')],['curve',t('lgCurve')],['est',`${t('lgEst')} (${name})`],['cal',t('lgCal')],['mfr',t('lgMfr')]])+`<p class="hint">${t('capDist')}</p>`; }
+function chartEcdf(x,r,name,lg,mLo,mHi){
+  const W=640,H=250,P={l:52,r:14,t:14,b:36}; const {tf,s,lo,hi}=range(x,r,lg,mLo,mHi); const n=s.length;
+  const X=u=>P.l+(u-lo)/(hi-lo)*(W-P.l-P.r), Y=p=>H-P.b-p*(H-P.t-P.b);
+  let g=frame(W,H), pts=[], prev=null; const step=Math.max(1,Math.floor(n/600));
+  for(let i=0;i<n;i+=step){ const u=tf(s[i]); if(u<lo||u>hi) continue; pts.push(`${X(u).toFixed(1)},${Y(i/n).toFixed(1)}`,`${X(u).toFixed(1)},${Y((i+1)/n).toFixed(1)}`); }
+  for(const p of [0.025,0.5,0.975]) g+=`<line x1="${P.l}" y1="${Y(p)}" x2="${W-P.r}" y2="${Y(p)}" stroke="var(--line)" stroke-dasharray="3 4"/><text x="${P.l-6}" y="${Y(p)+4}" text-anchor="end">${(p*100).toFixed(p===0.5?0:1)}%</text>`;
+  g+=`<polyline fill="none" stroke="var(--bar)" stroke-width="2.4" points="${pts.join(' ')}"/>`;
+  g+=`<line x1="${P.l}" y1="${P.t}" x2="${P.l}" y2="${H-P.b}" stroke="var(--line)"/><text transform="translate(12 ${(P.t+H-P.b)/2}) rotate(-90)" text-anchor="middle" style="font-family:var(--f-body)">${esc(t('yEcdf'))}</text>`;
+  g+=xAxis(lo,hi,lg,X,H-P.b,W,P)+`<text x="${(P.l+W-P.r)/2}" y="${H-3}" text-anchor="middle" style="font-family:var(--f-body)">${unitTxt(lg)}</text>`;
+  g+=vline(r.lower,tf,lo,hi,X,P.t,H-P.b,'var(--ink)')+vline(r.upper,tf,lo,hi,X,P.t,H-P.b,'var(--ink)')+vline(mLo,tf,lo,hi,X,P.t,H-P.b,'var(--accent)',1)+vline(mHi,tf,lo,hi,X,P.t,H-P.b,'var(--accent)',1)+'</svg>';
+  const below=v=>Number.isFinite(v)?(100*s.filter(e=>e<v).length/n).toFixed(1)+'%':'—';
+  return g+legend([['bar',t('lgEcdf')],['est',`${t('lgEst')} (${name})`],['mfr',t('lgMfr')]])+`<p class="hint">${t('capEcdf',below(mLo),below(mHi))}</p>`; }
+function chartForest(R){
+  const W=640,P={l:96,r:18,t:10,b:30},rowH=26; let out='';
+  for(const [lim,keyEst,keyCi,keyCal,m] of [['lower','lower','ciLower','cL',R.mLo],['upper','upper','ciUpper','cU',R.mHi]]){
+    const rows=['reflimR','RINet'].filter(k=>R[k]&&R[k].ok); const vals=[]; rows.forEach(k=>{ const x=R[k]; vals.push(x[keyEst],x[keyCi][0],x[keyCi][1]); if(x[keyCal]) vals.push(...x[keyCal]); }); if(m>0) vals.push(m);
+    const pos=vals.filter(v=>v>0); let lo=Math.log(Math.min(...pos))-0.08, hi=Math.log(Math.max(...pos))+0.08; const H=P.t+rows.length*rowH*2+P.b;
+    const X=u=>P.l+(u-lo)/(hi-lo)*(W-P.l-P.r);
+    let g=frame(W,H)+`<text x="4" y="${P.t+10}" style="font-family:var(--f-display);font-size:12px;fill:var(--ink)">${esc(t(lim))}</text>`;
+    rows.forEach((k,i)=>{ const x=R[k], y0=P.t+i*rowH*2+rowH*0.6;
+      g+=`<text x="4" y="${y0+16}" style="font-family:var(--f-mono);font-size:11px;fill:var(--muted)">${k}</text>`;
+      if(x[keyCal]){ const a=X(Math.log(x[keyCal][0])),b=X(Math.log(x[keyCal][1])); g+=`<rect x="${a}" y="${y0+4}" width="${Math.max(1,b-a)}" height="14" rx="3" fill="var(--cal-soft)" stroke="var(--cal)"/>`; }
+      const a=X(Math.log(x[keyCi][0])),b=X(Math.log(x[keyCi][1])); g+=`<line x1="${a}" y1="${y0+11}" x2="${b}" y2="${y0+11}" stroke="var(--ink)" stroke-width="3"/>`;
+      g+=`<circle cx="${X(Math.log(x[keyEst]))}" cy="${y0+11}" r="5" fill="var(--ink)"/>`;
+      g+=`<text x="${X(Math.log(x[keyEst]))}" y="${y0+34}" text-anchor="middle">${fmt(x[keyEst])}</text>`; });
+    if(m>0){ const xx=X(Math.log(m)); g+=`<line x1="${xx}" y1="${P.t}" x2="${xx}" y2="${H-P.b}" stroke="var(--accent)" stroke-width="2" stroke-dasharray="5 4"/>`; }
+    g+=xAxis(lo,hi,true,X,H-P.b,W,P)+'</svg>'; out+=g; }
+  return out+legend([['est',t('lgPoint')],['nat',t('lgNative')],['cal',t('lgCal')],['mfr',t('lgMfr')]])+`<p class="hint">${t('capForest')}</p>`; }
+function chartQQ(rl,name){
+  if(!rl.trunc) return '';
+  const W=640,H=260,P={l:58,r:14,t:14,b:38}; const lg=rl.lognormal; const v=Float64Array.from(rl.trunc.map(e=>lg?Math.log(e):e)).sort(); const n=v.length, nq=Math.min(100,n);
+  const xa=[],ya=[]; for(let k=0;k<nq;k++){ xa.push(qnorm(0.025+0.95*k/(nq-1))); const h=(n-1)*(k/(nq-1)), l=Math.floor(h), u=Math.min(l+1,n-1); ya.push(v[l]+(h-l)*(v[u]-v[l])); }
+  const yLo=Math.min(ya[0],rl.mean-2.3*rl.sd), yHi=Math.max(ya[nq-1],rl.mean+2.3*rl.sd), X=z=>P.l+(z+2.6)/5.2*(W-P.l-P.r), Y=y=>H-P.b-(y-yLo)/(yHi-yLo)*(H-P.t-P.b);
+  let g=frame(W,H);
+  for(const z of [-2,-1,0,1,2]) g+=`<line x1="${X(z)}" y1="${H-P.b}" x2="${X(z)}" y2="${H-P.b+4}" stroke="var(--muted)"/><text x="${X(z)}" y="${H-P.b+16}" text-anchor="middle">${z}</text>`;
+  g+=`<line x1="${P.l}" y1="${H-P.b}" x2="${W-P.r}" y2="${H-P.b}" stroke="var(--line)"/><line x1="${P.l}" y1="${P.t}" x2="${P.l}" y2="${H-P.b}" stroke="var(--line)"/>`;
+  for(const z of [-1.96,1.96]) g+=`<line x1="${X(z)}" y1="${P.t}" x2="${X(z)}" y2="${H-P.b}" stroke="var(--line)" stroke-dasharray="4 4"/>`;
+  for(let k=0;k<nq;k++) g+=`<circle cx="${X(xa[k]).toFixed(1)}" cy="${Y(ya[k]).toFixed(1)}" r="2.6" fill="var(--bar)"/>`;
+  g+=`<line x1="${X(-2.6)}" y1="${Y(rl.mean-2.6*rl.sd)}" x2="${X(2.6)}" y2="${Y(rl.mean+2.6*rl.sd)}" stroke="var(--cal)" stroke-width="2"/>`;
+  for(const [z,val] of [[-1.96,rl.lower],[1.96,rl.upper]]){ const y=Y(lg?Math.log(val):val); g+=`<circle cx="${X(z)}" cy="${y}" r="5" fill="var(--ink)"/><text x="${X(z)+(z<0?8:-8)}" y="${y+(z<0?-8:14)}" text-anchor="${z<0?'start':'end'}" style="fill:var(--ink)">${fmt(val)}</text>`; }
+  for(const k of [0,0.5,1]){ const y=yLo+(yHi-yLo)*k; g+=`<text x="${P.l-6}" y="${Y(y)+4}" text-anchor="end">${fmt(lg?Math.exp(y):y)}</text>`; }
+  g+=`<text x="${(P.l+W-P.r)/2}" y="${H-3}" text-anchor="middle" style="font-family:var(--f-body)">${esc(t('qqX'))}</text><text transform="translate(12 ${(P.t+H-P.b)/2}) rotate(-90)" text-anchor="middle" style="font-family:var(--f-body)">${esc(t('qqY'))}</text></svg>`;
+  return (name!=='reflimR'?`<p class="hint">${t('qqOnly')}</p>`:'')+g+legend([['dot',t('lgQQpts')],['curve',t('lgQQline')],['est',t('lgEst')+' (reflimR)']])+`<p class="hint">${t('capQQ')}</p>`; }
+function legend(items){ const sw={bar:'background:var(--bar)',curve:'background:var(--cal);height:3px',est:'background:var(--ink);height:3px',cal:'background:var(--cal-soft);border:1px solid var(--cal)',mfr:'background:var(--accent);height:3px',nat:'background:var(--ink);height:3px',dot:'background:var(--bar);border-radius:50%;width:10px'};
+  return `<div class="legend">${items.map(([k,l])=>`<span><i style="${sw[k]}"></i>${esc(l)}</span>`).join('')}</div>`; }
+function chartTabs(){ const tabs=[['dist','tDist'],['ecdf','tEcdf'],['forest','tForest'],['qq','tQQ']];
+  return `<div class="seg charttabs" role="group" style="margin-bottom:8px;flex-wrap:wrap">${tabs.map(([k,l])=>`<button type="button" data-c="${k}" aria-pressed="${CHART===k}">${esc(t(l))}</button>`).join('')}</div>`; }
+function chartFor(R,r){ const rl=R.reflimR;
+  if(CHART==='ecdf') return chartEcdf(R.vals,r,METHOD,rl.lognormal,R.mLo,R.mHi);
+  if(CHART==='forest') return chartForest(R);
+  if(CHART==='qq') return chartQQ(rl,METHOD);
+  return chartDist(R.vals,r,METHOD,rl.lognormal,R.mLo,R.mHi,rl); }
+const res0=()=>LAST||{};
+
+
+// ---------------- render ----------------
+function render(){
+  const R=LAST, out=$('result'); if(!R){ out.innerHTML=`<p class="hint">${t('emptyMsg')}</p>`; return; }
+  if(R.error){ out.innerHTML=`<p class="err">${t(R.error==='n<40'?'eFew':R.error==='n<40 after truncation'?'eTrunc':'eBad')}</p><p class="hint">${t('read',R.vals.length)}</p>`; return; }
+  const rl=R.reflimR, r=R[METHOD]&&R[METHOD].ok?R[METHOD]:rl; const u=R.unit?`<small>${esc(R.unit)}</small>`:'';
+  const verd=(m,raw,iv)=>{ const v=verdictOf(m,iv); if(v==='none') return `<div class="verdict none">${t('vNone')}</div>`; if(v==='na') return `<div class="verdict none">${t('vNA')}</div>`;
+    return v==='ok'?`<div class="verdict ok">${t('vOk',`<span class="mono">${esc(raw)}</span>`)}</div>`:`<div class="verdict bad">${t('vBad',`<span class="mono">${esc(raw)}</span>`,v==='low')}</div>`; };
+  const card=(title,est,ci,iv,q,m,raw,extra)=>`<div class="lim"><h3>${title}</h3><div class="est">${fmt(est)}${u}</div>
+    <div class="ints"><div><span>${t('native',METHOD)}</span><span class="v">${fmt(ci[0])} – ${fmt(ci[1])}</span></div>
+    <div class="cal"><span>${t('calib')}</span><span class="v">${iv?fmt(iv[0])+' – '+fmt(iv[1]):'—'}</span></div>
+    <div><span>${t('qf')}</span><span class="v">${fmt(q,2)}</span></div></div>${verd(m,raw,iv)}${extra||''}</div>`;
+  const notes=[];
+  if(R.isSample) notes.push(['info',t('nSample')]);
+  if(R.isSample&&R.an!=='TSH') notes.push(['',t('nSampleAn')]);
+  if(R.noMatch) notes.push(['',t('nNoMatch',$('analyte').selectedOptions[0].textContent)]);
+  if(R.sex==='all') notes.push(['',t('nAll')]);
+  if(R.sexUnk) notes.push(['',t('nSexUnk',R.sexUnk)]);
+  if(rl.n>2500) notes.push(['',t('nBig',rl.n.toLocaleString('en'))]);
+  if(rl.n<300) notes.push(['',t('nSmall',rl.n)]);
+  if(R.coarse) notes.push(['',t('nCoarse')]);
+  if(R.an==='other') notes.push(['info',t('nOther')]);
+  if(R.an==='FT4') notes.push(['info',t('nFT4')]);
+  if(METHOD==='RINet') notes.push(['info',t('nRinet')]);
+  if(R.cens) notes.push(['info',t('nCens',R.cens,R.mode==='exclude')]);
+  if(R.bad) notes.push(['info',t('nBad',R.bad)]);
+  if(rl.removed) notes.push(['info',t('nNonpos',rl.removed)]);
+  const pill=(m,iv)=>{ const v=verdictOf(m,iv); return v==='ok'?`<span class="pill ok">${t('pOk')}</span>`:(v==='low'||v==='high')?`<span class="pill bad">${t('pBad')}</span>`:`<span class="pill none">${t('pNone')}</span>`; };
+  const rows=[];
+  for(const name of ['reflimR','RINet']){ const x=R[name]; if(!x||!x.ok) continue;
+    rows.push(`<tr><td>${name}</td><td>${t('lower')}</td><td class="n">${fmt(x.lower)}</td><td class="n">${x.cL?fmt(x.cL[0])+' – '+fmt(x.cL[1]):'—'}</td><td>${pill(R.mLo,x.cL)}</td></tr>`);
+    rows.push(`<tr><td>${name}</td><td>${t('upper')}</td><td class="n">${fmt(x.upper)}</td><td class="n">${x.cU?fmt(x.cU[0])+' – '+fmt(x.cU[1]):'—'}</td><td>${pill(R.mHi,x.cU)}</td></tr>`); }
+  out.innerHTML=`${R.isSample?`<span class="sample">${t('sampleTag')}</span>`:''}${grpOf(R)?`<p class="hint">${t('group')}: <span class="mono">${esc(grpOf(R))}</span></p>`:''}
+   <div class="summary"><div class="kv"><b>${t('nTot')}</b><span>${rl.n.toLocaleString('en')}</span></div>
+   <div class="kv"><b>${t('nTrunc')}</b><span>${rl.nTrunc.toLocaleString('en')}</span></div>
+   <div class="kv"><b>${t('shape')}</b><span>${rl.lognormal?t('lnorm'):t('norm')}</span></div>
+   <div class="kv"><b>${t('bin')}</b><span>${R.bin.toLocaleString('en')}</span></div></div>
+   <div class="methodbar"><span class="hint">${t('showMethod')}</span><div class="seg" role="group"><button type="button" data-m="reflimR" aria-pressed="${METHOD==='reflimR'}">reflimR</button><button type="button" data-m="RINet" aria-pressed="${METHOD==='RINet'}">RINet</button></div></div>
+   <div class="limits">${card(t('lower'),r.lower,r.ciLower,r.cL,r.qL,R.mLo,R.mLoRaw,R.an==='TSH'?`<p class="hint">${t('lrlWarn')}</p>`:'')}${card(t('upper'),r.upper,r.ciUpper,r.cU,r.qU,R.mHi,R.mHiRaw)}</div>
+   <div class="chartbox">${chartTabs()}${chartFor(R,r)}</div>
+   <h3 style="font-family:var(--f-display);font-size:15px;margin:18px 0 0">${t('cmpH')}</h3>
+   <div class="tblwrap"><table class="cmp"><thead><tr><th>${t('cmpMethod')}</th><th>${t('cmpLimit')}</th><th>${t('cmpEst')}</th><th>${t('cmpCal')}</th><th>${t('cmpMfr')}</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>
+   <div class="notes">${notes.map(([c,x])=>`<div class="note ${c}">${x}</div>`).join('')}</div>
+   <div class="exports" id="exports" hidden><span class="hint">${t('exH')}</span><button type="button" class="small" id="exCsv">${t('exCsv')}</button><button type="button" class="small" id="exRep">${t('exRep')}</button><span class="hint" id="exMsg"></span></div>`;
+  out.querySelectorAll('.charttabs button[data-c]').forEach(b=>b.addEventListener('click',()=>{ CHART=b.dataset.c; render(); }));
+  out.querySelectorAll('.seg button[data-m]').forEach(b=>b.addEventListener('click',()=>{ METHOD=b.dataset.m; render(); }));
+  if(DL){ $('exports').hidden=false; $('exCsv').addEventListener('click',()=>save('CalibRI_results.csv',resultsCsv(),'exMsg')); $('exRep').addEventListener('click',()=>save('CalibRI_report.html',reportHtml(),'exMsg')); }
+}
+
+// ---------------- exports ----------------
+function resultsCsv(){ const R=LAST, L=[['group','analyte','n','calibration_bin','method','limit','estimate','native_lo','native_hi','q_hat','calibrated_lo','calibrated_hi','manufacturer','manufacturer_vs_calibrated'].join(',')];
+  for(const name of ['reflimR','RINet']){ const x=R[name]; if(!x||!x.ok) continue;
+    for(const [lim,est,ci,q,iv,m] of [['LRL',x.lower,x.ciLower,x.qL,x.cL,R.mLo],['URL',x.upper,x.ciUpper,x.qU,x.cU,R.mHi]]){
+      const v=verdictOf(m,iv); L.push([`"${(grpOf(R)||'').replace(/"/g,'""')}"`,R.an,R.reflimR.n,R.bin,name,lim,est,ci[0],ci[1],q,iv?iv[0]:'',iv?iv[1]:'',Number.isFinite(m)?m:'',v==='ok'?'inside':(v==='low'||v==='high')?'outside':''].join(',')); } }
+  return L.join('\n')+'\n'; }
+function reportHtml(){ const R=LAST, d=LANG==='ar'?'rtl':'ltr';
+  const rows=[]; for(const name of ['reflimR','RINet']){ const x=R[name]; if(!x||!x.ok) continue;
+    for(const [lim,est,ci,iv,m] of [[t('lower'),x.lower,x.ciLower,x.cL,R.mLo],[t('upper'),x.upper,x.ciUpper,x.cU,R.mHi]]){ const v=verdictOf(m,iv);
+      rows.push(`<tr><td>${name}</td><td>${lim}</td><td>${fmt(est)}</td><td>${fmt(ci[0])} – ${fmt(ci[1])}</td><td><b>${iv?fmt(iv[0])+' – '+fmt(iv[1]):'—'}</b></td><td>${Number.isFinite(m)?m:'—'}</td><td>${v==='ok'?t('pOk'):(v==='low'||v==='high')?t('pBad'):'—'}</td></tr>`); } }
+  const notes=$('result').querySelectorAll('.note'); const nl=[...notes].map(n=>`<li>${n.innerHTML}</li>`).join('');
+  return `<!doctype html><html lang="${LANG}" dir="${d}"><head><meta charset="utf-8"><title>${t('rep')}</title><style>body{font-family:Tahoma,Arial,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#14222C}h1{font-size:22px}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border-bottom:1px solid #ccd;padding:6px 8px;text-align:start}th{color:#556}.m{font-family:monospace}.s{color:#556;font-size:13px}</style></head><body>
+<h1>${t('rep')}</h1><p class="s">${t('repGen')}: ${new Date().toISOString().slice(0,16).replace('T',' ')} · reflimR 1.1.0 · RINet 0.1.1 · conformal scheme (d)</p>
+<p>${t('repAnalyte')}: <b>${esc($('analyte').selectedOptions[0].textContent)}</b>${R.unit?' ('+esc(R.unit)+')':''}${grpOf(R)?' · '+t('group')+': '+esc(grpOf(R)):''} · ${t('repN')}: <b>${R.reflimR.n}</b> · ${t('bin')}: ${R.bin}</p>
+<table><thead><tr><th>${t('cmpMethod')}</th><th>${t('cmpLimit')}</th><th>${t('cmpEst')}</th><th>${t('native','')}</th><th>${t('cmpCal')}</th><th>${t('cmpMfr')}</th><th></th></tr></thead><tbody>${rows.join('')}</tbody></table>
+${nl?`<h2 style="font-size:16px">${t('repNotes')}</h2><ul>${nl}</ul>`:''}<p class="s">${t('repDisc')}</p><p class="s">CalibRI · github.com/hussein-alnaffakh1984/CalibRI</p></body></html>`; }
+let DL=null;
+async function save(filename,data,msgId){ const el=$(msgId);
+  try{ await DL.save({filename,data}); if(el) el.textContent= msgId==='tplMsg'?t('tplSaved'):t('saved'); }
+  catch(err){ const c=err&&err.code; if(el) el.textContent= c==='declined'?t('declined'): c==='rate_limited'?t('busyDl'):t('noDl'); } }
+function b64bytes(b){ const s=atob(b), u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; }
+
+// ---------------- events ----------------
+function updateCount(){ const tk=sheetRows?sheetTokens():textTokens(); const n=tk.filter(s=>String(s??'').trim()!=='').length; $('countHint').textContent=t('count',n); }
+const AN_PAT={TSH:/^tsh$/i,FT4:/^f\s*-?t4$/i,TT4:/^(t\s*-?t4|t4|total\s*t4)$/i,TT3:/^(t\s*-?t3|t3|total\s*t3)$/i,Tg:/^(tg|thyroglobulin)$/i,HbA1c:/^(hba1c|a1c|hb\s*a1c|glycated.*)$/i};
+let NOMATCH=false;
+function analyteFromValue(v){ for(const k in AN_PAT) if(AN_PAT[k].test(String(v).trim())) return k; return 'other'; }
+function onAnalyteChange(fromFilter){ $('mLo').value=''; $('mHi').value=''; $('unit').value=''; NOMATCH=false;
+  if(!fromFilter && sheetRows && $('f1c').value){ const an=$('analyte').value, opts=[...$('f1v').options].map(o=>o.value);
+    const hit= an==='other'?null:opts.find(v=>AN_PAT[an].test(v)); if(hit) $('f1v').value=hit; else if(an!=='other') NOMATCH=true; }
+  updateCount(); if(LAST) runNow(); }
+function runNow(){ $('run').disabled=true; $('result').innerHTML=`<p class="busy">${t('busy')}</p>`;
+  setTimeout(()=>{ try{ LAST=compute(); render(); } finally { $('run').disabled=false; } },30); }
+$('run').addEventListener('click',runNow);
+$('lnAr').addEventListener('click',()=>setLang('ar')); $('lnEn').addEventListener('click',()=>setLang('en'));
+$('vals').addEventListener('input',()=>{ clearSampleMfr(); $('vals').dataset.sample='0'; sheetRows=null; SEXCOL=null; updateSexHint(); $('colPick').hidden=true; updateCount(); });
+document.querySelectorAll('input[name=sex]').forEach(r=>r.addEventListener('change',()=>{ updateCount(); if(LAST) runNow(); }));
+$('clear').addEventListener('click',()=>{ SEXCOL=null; updateSexHint(); $('vals').value=''; $('vals').dataset.sample='0'; sheetRows=null; $('colPick').hidden=true; $('file').value=''; $('mLo').value=''; $('mHi').value=''; $('unit').value=''; LAST=null; render(); updateCount(); });
+let MFR_SAMPLE=false;
+function clearSampleMfr(){ if(MFR_SAMPLE){ $('mLo').value=''; $('mHi').value=''; $('unit').value=''; MFR_SAMPLE=false; } }
+function loadSample(){ setTimeout(()=>{ MFR_SAMPLE=true; },0); $('sexF').checked=true; SEXCOL=null; updateSexHint();  $('vals').value=sampleData().join('\n'); $('vals').dataset.sample='1'; sheetRows=null; $('colPick').hidden=true; $('file').value=''; $('analyte').value='TSH'; $('mLo').value='0.35'; $('mHi').value='5.10'; $('unit').value='mIU/L'; updateCount(); runNow(); }
+$('loadSample').addEventListener('click',loadSample);
+function fillSelect(sel,opts,withNone){ sel.innerHTML=(withNone?`<option value="">${esc(t('none'))}</option>`:'')+opts.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join(''); }
+function refreshF(c,v,pref){ const fc=$(c).value; if(!fc){ $(v).innerHTML='<option value="">—</option>'; $(v).disabled=true; updateCount(); return; } $(v).disabled=false;
+  const vs=[...new Set(sheetRows.map(r=>String(r[fc]??'').trim()))].filter(x=>x!=='').slice(0,300); fillSelect($(v),vs,false); const p=vs.find(x=>pref&&pref.test(x)); if(p) $(v).value=p; updateCount(); }
+function setRows(rows){ clearSampleMfr(); sheetRows=rows; const cols=Object.keys(rows[0]||{}); fillSelect($('col'),cols,false); fillSelect($('f1c'),cols,true); fillSelect($('f2c'),cols,true);
+  const numeric=c=>rows.slice(0,80).filter(r=>Number.isFinite(Number(String(r[c]??'').replace(/[<>]/g,'').trim()))&&String(r[c]??'').trim()!=='').length;
+  const guess=cols.find(c=>/^\s*result\s*$/i.test(c))||cols.slice().sort((a,b)=>numeric(b)-numeric(a))[0]; $('col').value=guess;
+  const fc=cols.find(c=>/chemistry|test|analyte|assay/i.test(c)); if(fc) $('f1c').value=fc; refreshF('f1c','f1v',/^tsh$/i); if($('f1c').value){ const an=analyteFromValue($('f1v').value); if(an!==$('analyte').value){ $('analyte').value=an; onAnalyteChange(true); } }
+  SEXCOL=cols.find(c=>/^\s*(sex|gender|الجنس|جنس)\s*$/i.test(c))||null; refreshF('f2c','f2v',null); updateSexHint();
+  $('colPick').hidden=false; $('vals').value=''; $('vals').dataset.sample='0'; updateCount(); }
+$('col').addEventListener('change',()=>{ updateCount(); if(LAST) runNow(); });
+$('f1v').addEventListener('change',()=>{ const an=analyteFromValue($('f1v').value); if(an!==$('analyte').value){ $('analyte').value=an; onAnalyteChange(true); } else { updateCount(); if(LAST) runNow(); } });
+$('f2v').addEventListener('change',()=>{ updateCount(); if(LAST) runNow(); });
+$('analyte').addEventListener('change',()=>onAnalyteChange(false));
+['mLo','mHi','unit'].forEach(id=>$(id).addEventListener('input',()=>{ MFR_SAMPLE=false; }));
+['mLo','mHi','unit'].forEach(id=>$(id).addEventListener('change',()=>{ if(LAST) runNow(); }));
+$('f1c').addEventListener('change',()=>refreshF('f1c','f1v',null)); $('f2c').addEventListener('change',()=>refreshF('f2c','f2v',null));
+$('file').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f) return; const rd=new FileReader();
+  rd.onload=ev=>{ try{ let rows;
+      if(/\.(csv|txt)$/i.test(f.name)){ const txt=new TextDecoder().decode(ev.target.result).replace(/^﻿/,''); const lines=txt.split(/\r?\n/).filter(l=>l.trim()); const h0=lines[0];
+        const sep=(h0.match(/;/g)||[]).length>(h0.match(/,/g)||[]).length?';':(h0.includes('\t')?'\t':',');
+        const hdr=h0.split(sep).map(s=>s.trim().replace(/^"|"$/g,'')); const numHdr=hdr.every(h=>Number.isFinite(Number(h.replace(/[<>]/g,''))));
+        const H=numHdr?hdr.map((_,i)=>'column '+(i+1)):hdr; rows=(numHdr?lines:lines.slice(1)).map(l=>{const c=l.split(sep);const o={};H.forEach((h,i)=>o[h]=(c[i]??'').trim().replace(/^"|"$/g,''));return o;});
+      } else { if(typeof XLSX==='undefined') throw new Error('xlsx'); const wb=XLSX.read(ev.target.result,{type:'array'}); rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:'',raw:false}); }
+      rows=rows.filter(r=>Object.values(r).some(v=>String(v).trim()!=='')); if(!rows.length) throw new Error('empty'); setRows(rows); LAST=null; render();
+    }catch(err){ $('result').innerHTML=`<p class="err">${t(err.message==='xlsx'?'eXlsx':'eFile')}</p>`; } };
+  rd.readAsArrayBuffer(f); });
+(async()=>{ if(typeof window.claude==='undefined'){ // standalone hosting (e.g. Netlify): ordinary browser downloads
+    DL={save:async({filename,data})=>{ const mime=/\.csv$/.test(filename)?'text/csv':/\.html$/.test(filename)?'text/html':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      const url=URL.createObjectURL(new Blob([data],{type:mime})); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); return {status:'saved'}; }};
+  } else { try{ DL=await window.claude.use("downloads"); }catch(e){ DL=null; } }
+  if(!DL) return; $('tplBtns').hidden=false; if(LAST) render();
+  $('tplX').addEventListener('click',()=>save('CalibRI_template.xlsx',b64bytes(TPL_XLSX),'tplMsg'));
+  $('tplC').addEventListener('click',()=>save('CalibRI_template.csv','Result,Sex\n','tplMsg')); })();
+applyLang(); loadSample();
+</script>
